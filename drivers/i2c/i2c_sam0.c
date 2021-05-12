@@ -518,10 +518,14 @@ static int i2c_sam0_set_apply_bitrate(const struct device *dev,
 		CTRLA |= SERCOM_I2CM_CTRLA_SDAHOLD(0x0);
 		i2c->CTRLA.reg = CTRLA;
 		wait_synchronization(i2c);
-
+#if CONFIG_I2C_SAM0_BAUDRATE != 0
+		baud = CONFIG_I2C_SAM0_BAUDRATE;
+#else
 		/* 5 is the nominal 100ns rise time from the app notes */
 		baud = (SOC_ATMEL_SAM0_GCLK0_FREQ_HZ / 100000U - 5U - 10U) / 2U;
+#endif
 		if (baud > 255U || baud < 1U) {
+			LOG_ERR("Baud out of range: %d", baud);
 			return -ERANGE;
 		}
 
