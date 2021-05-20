@@ -669,8 +669,13 @@ static int i2c_sam0_initialize(const struct device *dev)
 
 #ifdef MCLK
 	/* Enable the GCLK */
+#ifdef CONFIG_I2C_SAM0_GCLK3
+	GCLK->PCHCTRL[cfg->gclk_core_id].reg = GCLK_PCHCTRL_GEN_GCLK3 |
+					       GCLK_PCHCTRL_CHEN;
+#else
 	GCLK->PCHCTRL[cfg->gclk_core_id].reg = GCLK_PCHCTRL_GEN_GCLK0 |
 					       GCLK_PCHCTRL_CHEN;
+#endif
 	/* Enable SERCOM clock in MCLK */
 	*cfg->mclk |= cfg->mclk_mask;
 #else
