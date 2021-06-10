@@ -19,8 +19,15 @@
 #define SAM0_DPLL_FREQ_MIN_HZ		(96000000U)
 #define SAM0_DPLL_FREQ_MAX_HZ		(200000000U)
 
+static void gclk_connect(uint8_t gclk, uint8_t src, uint8_t div)
+{
+	GCLK->GENCTRL[gclk].reg = GCLK_GENCTRL_SRC(src)
+				| GCLK_GENCTRL_DIV(div)
+				| GCLK_GENCTRL_GENEN;
+}
+
 #if CONFIG_SOC_ATMEL_SAMD5X_XOSC32K_AS_MAIN
-static void osc32k_init(void)
+static void osc_init(void)
 {
 	OSC32KCTRL->XOSC32K.reg = OSC32KCTRL_XOSC32K_ENABLE | OSC32KCTRL_XOSC32K_XTALEN
 				| OSC32KCTRL_XOSC32K_EN32K | OSC32KCTRL_XOSC32K_RUNSTDBY
@@ -34,8 +41,23 @@ static void osc32k_init(void)
 
 }
 #elif CONFIG_SOC_ATMEL_SAMD5X_OSCULP32K_AS_MAIN
-static void osc32k_init(void)
+static void osc_init(void)
 {
+	GCLK->GENCTRL[1].reg = GCLK_GENCTRL_SRC(GCLK_SOURCE_OSCULP32K)
+			     | GCLK_GENCTRL_RUNSTDBY | GCLK_GENCTRL_GENEN;
+}
+
+#elif CONFIG_SOC_ATMEL_SAMD5X_XOSC_20MHZ
+static void osc_init(void)
+{
+    /* Configure External Oscillator (XOSC1) */
+	OSCCTRL->XOSCCTRL[1].reg = OSCCTRL_XOSCCTRL_STARTUP(8) | OSCCTRL_XOSCCTRL_IMULT(5) | OSCCTRL_XOSCCTRL_IPTAT(3) | OSCCTRL_XOSCCTRL_XTALEN | OSCCTRL_XOSCCTRL_ENABLE;
+
+	while (!OSCCTRL->STATUS.bit.XOSCRDY1)
+    {
+        /* Waiting for the XOSC Ready state */
+    }
+
 	GCLK->GENCTRL[1].reg = GCLK_GENCTRL_SRC(GCLK_SOURCE_OSCULP32K)
 			     | GCLK_GENCTRL_RUNSTDBY | GCLK_GENCTRL_GENEN;
 }
@@ -43,6 +65,7 @@ static void osc32k_init(void)
 #error "No Clock Source selected."
 #endif
 
+#if CONFIG_SOC_ATMEL_SAMD5X_DPLL
 static void dpll_init(uint8_t n, uint32_t f_cpu)
 {
 	/* We source the DPLL from 32kHz GCLK1 */
@@ -73,11 +96,12 @@ static void dpll_init(uint8_t n, uint32_t f_cpu)
 	while (!(OSCCTRL->Dpll[n].DPLLSTATUS.bit.CLKRDY &&
 		 OSCCTRL->Dpll[n].DPLLSTATUS.bit.LOCK)) {
 	}
-
 }
+#endif
 
 static void dfll_init(void)
 {
+#if CONFIG_SOC_ATMEL_SAMD5X_DFLL
 	uint32_t reg = OSCCTRL_DFLLCTRLB_QLDIS
 #ifdef OSCCTRL_DFLLCTRLB_WAITLOCK
 		     | OSCCTRL_DFLLCTRLB_WAITLOCK
@@ -89,6 +113,7 @@ static void dfll_init(void)
 
 	while (!OSCCTRL->STATUS.bit.DFLLRDY) {
 	}
+#endif
 }
 
 static void gclk_reset(void)
@@ -98,16 +123,10 @@ static void gclk_reset(void)
 	}
 }
 
-static void gclk_connect(uint8_t gclk, uint8_t src, uint8_t div)
-{
-	GCLK->GENCTRL[gclk].reg = GCLK_GENCTRL_SRC(src)
-				| GCLK_GENCTRL_DIV(div)
-				| GCLK_GENCTRL_GENEN;
-}
-
 static int atmel_samd_init(const struct device *arg)
 {
 	uint32_t key;
+#if CONFIG_SOC_ATMEL_SAMD5X_DPLL_MAIN_CLK
 	uint8_t dfll_div;
 
 	if (CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC < SAM0_DFLL_FREQ_HZ) {
@@ -117,6 +136,7 @@ static int atmel_samd_init(const struct device *arg)
 	} else {
 		dfll_div = 1;
 	}
+#endif
 
 	ARG_UNUSED(arg);
 
@@ -126,15 +146,25 @@ static int atmel_samd_init(const struct device *arg)
 	CMCC->CTRL.bit.CEN = 1;
 
 	gclk_reset();
-	osc32k_init();
+	osc_init();
 	dfll_init();
+#if CONFIG_SOC_ATMEL_SAMD5X_DPLL
 	dpll_init(0, dfll_div * CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC);
+#endif
 
+#if CONFIG_SOC_ATMEL_SAMD5X_DPLL_MAIN_CLK
 	/* use DPLL for main clock */
 	gclk_connect(0, GCLK_SOURCE_DPLL0, dfll_div);
 
 	/* connect GCLK2 to 48 MHz DFLL for USB */
 	gclk_connect(2, GCLK_SOURCE_DFLL48M, 0);
+#elif CONFIG_SOC_ATMEL_SAMD5X_XOSC_20MHZ
+	gclk_connect(0, GCLK_SOURCE_XOSC1, 1);
+	/* Set CLK GEN 1 to run off XOSC 1 */
+	gclk_connect(3, GCLK_SOURCE_XOSC1, 4);
+#else
+#error "Need to select main clock configuration"
+#endif
 
 	/* Install default handler that simply resets the CPU
 	 * if configured in the kernel, NOP otherwise

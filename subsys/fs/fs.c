@@ -602,7 +602,7 @@ int fs_stat(const char *abs_path, struct fs_dirent *entry)
 
 	rc = mp->fs->stat(mp, abs_path, entry);
 	if (rc < 0) {
-		LOG_ERR("failed get file or dir stat (%d)", rc);
+		LOG_DBG("failed get file or dir stat (%d)", rc);
 	}
 	return rc;
 }
