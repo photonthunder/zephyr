@@ -432,7 +432,7 @@ static void put(const struct log_backend *const backend,
 	log_backend_std_put(&log_output, 0, msg);
 }
 
-static void log_backend_fs_init(void)
+static void log_backend_fs_init(struct log_backend const *const backend)
 {
 }
 
