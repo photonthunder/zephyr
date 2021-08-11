@@ -165,6 +165,8 @@ static int atmel_samd_init(const struct device *arg)
 	// gclk_connect(3, GCLK_SOURCE_XOSC1, 4);
 	GCLK->GENCTRL[3].reg = GCLK_GENCTRL_SRC(GCLK_SOURCE_XOSC1) | GCLK_GENCTRL_DIV(4) |
 			       GCLK_GENCTRL_GENEN; // | GCLK_GENCTRL_OE;
+	GCLK->GENCTRL[5].reg = GCLK_GENCTRL_SRC(GCLK_SOURCE_XOSC1) | GCLK_GENCTRL_DIV(2) |
+			       GCLK_GENCTRL_GENEN | GCLK_GENCTRL_OE;
 #else
 #error "Need to select main clock configuration"
 #endif
