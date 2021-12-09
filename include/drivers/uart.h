@@ -394,6 +394,12 @@ __subsystem struct uart_driver_api {
 	void (*irq_tx_enable)(const struct device *dev);
 
 	/** Interrupt driven transfer disabling function */
+	void (*irq_tx_complete_disable)(const struct device *dev);
+
+	/** Interrupt driven transfer enabling function */
+	void (*irq_tx_complete_enable)(const struct device *dev);
+
+	/** Interrupt driven transfer disabling function */
 	void (*irq_tx_disable)(const struct device *dev);
 
 	/** Interrupt driven transfer ready function */
@@ -848,6 +854,47 @@ static inline int uart_fifo_read(const struct device *dev, uint8_t *rx_data,
 #endif
 
 	return -ENOTSUP;
+}
+
+/**
+ * @brief Enable TX Complete interrupt in IER.
+ *
+ * @param dev UART device structure.
+ *
+ * @return N/A
+ */
+__syscall void uart_irq_tx_complete_enable(const struct device *dev);
+
+static inline void z_impl_uart_irq_tx_complete_enable(const struct device *dev)
+{
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+	const struct uart_driver_api *api =
+		(const struct uart_driver_api *)dev->api;
+
+	if (api->irq_tx_complete_enable != NULL) {
+		api->irq_tx_complete_enable(dev);
+	}
+#endif
+}
+/**
+ * @brief Disable TX Complete interrupt in IER.
+ *
+ * @param dev UART device structure.
+ *
+ * @return N/A
+ */
+__syscall void uart_irq_tx_complete_disable(const struct device *dev);
+
+static inline void z_impl_uart_irq_tx_complete_disable(const struct device *dev)
+{
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+	const struct uart_driver_api *api =
+		(const struct uart_driver_api *)dev->api;
+
+	if (api->irq_tx_complete_disable != NULL) {
+		api->irq_tx_complete_disable(dev);
+	}
+#endif
 }
 
 /**
