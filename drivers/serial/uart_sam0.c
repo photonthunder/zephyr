@@ -847,28 +847,18 @@ static void uart_sam0_irq_tx_disable(const struct device *dev)
 
 static int uart_sam0_irq_tx_ready(const struct device *dev)
 {
-<<<<<<< HEAD
 	const struct uart_sam0_dev_cfg *config = dev->config;
 	SercomUsart * const regs = config->regs;
 
-=======
-	SercomUsart * const regs = DEV_CFG(dev)->regs;
->>>>>>> 6853f5d766... samd5x driver updates
 	return (regs->INTFLAG.bit.DRE != 0) && (regs->INTENSET.bit.DRE != 0);
 }
 
 static int uart_sam0_irq_tx_complete(const struct device *dev)
 {
-<<<<<<< HEAD
 	const struct uart_sam0_dev_cfg *config = dev->config;
 	SercomUsart * const regs = config->regs;
 
-	return (regs->INTFLAG.bit.TXC != 0) && (regs->INTENSET.bit.TXC != 0);
-=======
-	SercomUsart *const regs = DEV_CFG(dev)->regs;
-
 	return ((regs->INTENSET.bit.TXC != 0) && (regs->INTFLAG.bit.TXC != 0));
->>>>>>> 6853f5d766... samd5x driver updates
 }
 
 static void uart_sam0_irq_rx_enable(const struct device *dev)
@@ -889,16 +879,10 @@ static void uart_sam0_irq_rx_disable(const struct device *dev)
 
 static int uart_sam0_irq_rx_ready(const struct device *dev)
 {
-<<<<<<< HEAD
 	const struct uart_sam0_dev_cfg *config = dev->config;
 	SercomUsart * const regs = config->regs;
-
-	return regs->INTFLAG.bit.RXC != 0;
-=======
-	SercomUsart * const regs = DEV_CFG(dev)->regs;
 	//return (regs->INTFLAG.bit.RXC != 0);
 	return ((regs->INTENSET.bit.RXC != 0) && (regs->INTFLAG.bit.RXC != 0));
->>>>>>> 6853f5d766... samd5x driver updates
 }
 
 static int uart_sam0_fifo_read(const struct device *dev, uint8_t *rx_data,
