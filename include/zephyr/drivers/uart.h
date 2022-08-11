@@ -410,10 +410,10 @@ __subsystem struct uart_driver_api {
 #endif
 
 	/** Interrupt driven transfer complete disable function */
-	int (*irq_tx_complete_disable)(const struct device *dev);
+	void (*irq_tx_complete_disable)(const struct device *dev);
 	
 	/** Interrupt driven transfer complete enable function */
-	int (*irq_tx_complete_enable)(const struct device *dev);
+	void (*irq_tx_complete_enable)(const struct device *dev);
 	
 	/** Interrupt driven transfer enabling function */
 	void (*irq_tx_enable)(const struct device *dev);
