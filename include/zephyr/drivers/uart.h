@@ -865,6 +865,48 @@ static inline int uart_fifo_read_u16(const struct device *dev,
 }
 
 /**
+ * @brief Disable TX Complete interrupt.
+ *
+ * @param dev UART device instance.
+ */
+__syscall void uart_irq_tx_complete_disable(const struct device *dev);
+
+static inline void z_impl_uart_irq_tx_complete_disable(const struct device *dev)
+{
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+	const struct uart_driver_api *api =
+		(const struct uart_driver_api *)dev->api;
+
+	if (api->irq_tx_complete_disable != NULL) {
+		api->irq_tx_complete_disable(dev);
+	}
+#else
+	ARG_UNUSED(dev);
+#endif
+}
+
+/**
+ * @brief Enable TX Complete interrupt.
+ *
+ * @param dev UART device instance.
+ */
+__syscall void uart_irq_tx_complete_enable(const struct device *dev);
+
+static inline void z_impl_uart_irq_tx_complete_enable(const struct device *dev)
+{
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+	const struct uart_driver_api *api =
+		(const struct uart_driver_api *)dev->api;
+
+	if (api->irq_tx_complete_enable != NULL) {
+		api->irq_tx_complete_enable(dev);
+	}
+#else
+	ARG_UNUSED(dev);
+#endif
+}
+	
+/**
  * @brief Enable TX interrupt in IER.
  *
  * @param dev UART device instance.
