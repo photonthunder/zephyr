@@ -815,14 +815,16 @@ static int uart_sam0_fifo_fill(const struct device *dev,
 
 static void uart_sam0_irq_tx_complete_disable(const struct device *dev)
 {
-	SercomUsart * const regs = DEV_CFG(dev)->regs;
+	const struct uart_sam0_dev_cfg *config = dev->config;
+	SercomUsart * const regs = config->regs;
 
 	regs->INTENCLR.reg = SERCOM_USART_INTENCLR_TXC;
 }
 
 static void uart_sam0_irq_tx_complete_enable(const struct device *dev)
 {
-	SercomUsart * const regs = DEV_CFG(dev)->regs;
+	const struct uart_sam0_dev_cfg *config = dev->config;
+	SercomUsart * const regs = config->regs;
 
 	regs->INTENSET.reg = SERCOM_USART_INTENSET_TXC;
 }
