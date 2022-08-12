@@ -813,22 +813,6 @@ static int uart_sam0_fifo_fill(const struct device *dev,
 	}
 }
 
-static void uart_sam0_irq_tx_complete_disable(const struct device *dev)
-{
-	const struct uart_sam0_dev_cfg *config = dev->config;
-	SercomUsart * const regs = config->regs;
-
-	regs->INTENCLR.reg = SERCOM_USART_INTENCLR_TXC;
-}
-
-static void uart_sam0_irq_tx_complete_enable(const struct device *dev)
-{
-	const struct uart_sam0_dev_cfg *config = dev->config;
-	SercomUsart * const regs = config->regs;
-
-	regs->INTENSET.reg = SERCOM_USART_INTENSET_TXC;
-}
-
 static void uart_sam0_irq_tx_enable(const struct device *dev)
 {
 	const struct uart_sam0_dev_cfg *config = dev->config;
@@ -1203,8 +1187,6 @@ static const struct uart_driver_api uart_sam0_driver_api = {
 #if CONFIG_UART_INTERRUPT_DRIVEN
 	.fifo_fill = uart_sam0_fifo_fill,
 	.fifo_read = uart_sam0_fifo_read,
-	.irq_tx_complete_disable = uart_sam0_irq_tx_complete_disable,
-	.irq_tx_complete_enable = uart_sam0_irq_tx_complete_enable,
 	.irq_tx_enable = uart_sam0_irq_tx_enable,
 	.irq_tx_disable = uart_sam0_irq_tx_disable,
 	.irq_tx_ready = uart_sam0_irq_tx_ready,
