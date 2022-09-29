@@ -234,6 +234,25 @@ Architectures
 
 * RISC-V
 
+  * Introduced support for RV32E.
+  * Reduced callee-saved registers for RV32E.
+  * Introduced Zicsr, Zifencei and BitManip as separate extensions.
+  * Introduced :kconfig:option:`CONFIG_ALWAYS_SWITCH_THROUGH_ECALL` for
+    plaforms that require every ``mret`` to be balanced by ``ecall``.
+  * IRQ vector table is now used for vectored mode.
+  * Disabled :kconfig:option:`CONFIG_IRQ_VECTOR_TABLE_JUMP_BY_CODE` for CLIC.
+  * ``STRINGIFY`` macro is now used for CSR helpers.
+  * :kconfig:option:`CONFIG_CODE_DATA_RELOCATION` is now supported.
+  * PLIC and CLIC are now decoupled.
+  * ``jedec,spi-nor`` is no longer required to be ``okay`` by the RISC-V arch
+    linker script.
+  * Removed usage of ``SOC_ERET``.
+  * Removed usage of ``ulong_t``.
+  * Added new TLS-based :c:func:`arch_is_user_context` implementation.
+  * Fixed PMP for builds with SMP enabled.
+  * Fixed the per-thread m-mode/u-mode entry array.
+  * :c:func:`semihost_exec` function is now aligned at 16-byte boundary.
+
 * x86
 
 * Xtensa
@@ -359,6 +378,10 @@ Boards & SoC Support
 * Made these changes in other SoC series:
 
   * gigadevice: Enable SEGGER RTT
+  * Raspberry Pi Pico: Added ADC support
+  * Raspberry Pi Pico: Added PWM support
+  * Raspberry Pi Pico: Added SPI support
+  * Raspberry Pi Pico: Added watchdog support
 
 * Changes for ARC boards:
 
@@ -416,6 +439,7 @@ Boards & SoC Support
 
   * sam_e70_xplained: Uses EEPROM devicetree bindings for Ethernet MAC
   * sam_v71_xult: Uses EEPROM devicetree bindings for Ethernet MAC
+  * rpi_pico: Added west runner configurations for Picoprobe, Jlink and Blackmagicprobe
 
 * Added support for these following shields:
 
@@ -443,6 +467,11 @@ Drivers and Sensors
 
   * STM32: Now supports Vbat monitoring channel and STM32U5 series.
   * Added driver for GigaDevice GD32 SoCs
+  * Raspberry Pi Pico: Added ADC support for the Pico series.
+  * Added :c:struct:`adc_dt_spec` related helpers for sequence initialization,
+    setting up channels, and converting raw values to millivolts.
+  * Fixed :c:macro:`ADC_DT_SPEC_GET` and related macros to properly handle
+    channel identifiers >= 10.
 
 * Audio
 
@@ -466,24 +495,37 @@ Drivers and Sensors
 * Clock control
 
   * STM32: PLL_P, PLL_Q, PLL_R outputs can now be used as domain clock.
-  * Added driver for GigaDevice GD32 SoCs (peripheral clocks configuration only)
+  * Added driver for GigaDevice GD32 SoCs (peripheral clocks configuration only).
+  * Documented behavior when clock is not on.
 
 * Coredump
 
 * Counter
 
+  * Added :c:func:`counter_get_value_64` function.
   * STM32: RTC : Now supports STM32U5 and STM32F1 series.
   * STM32: Timer : Now supports STM32L4 series.
   * Added counter support using CTimer for NXP MIMXRT595.
-  * ESP32: Added support to Pulse Counter Mode (PCNT)
+  * ESP32: Added support to Pulse Counter Mode (PCNT) and RTC.
 
 * Crypto
+
+  * Added Intel ADSP sha driver.
+  * stm32: Check if clock device is ready before accessing clock control
+    devices.
+  * ataes132a: Convert to devicetree.
 
 * DAC
 
 * DAI
 
 * Display
+
+  * Renamed EPD controller driver GD7965 to UC81xx.
+  * Improved support for different controllers in ssd16xx and uc81xx drivers.
+  * Added basic read support for ssd16xx compatible EPD controllers.
+  * Revised intel_multibootfb driver
+  * Added MAX7219 display controller driver
 
 * Disk
 
@@ -504,6 +546,11 @@ Drivers and Sensors
     :dtcompatible:`microchip,xec-eeprom` devicetree binding for more information.
 
 * Entropy
+
+  * Update drivers to use devicetree Kconfig symbol.
+  * gecko: Add driver using Secure Element module of EFR3.
+  * Added entropy driver for MCUX CAAM.
+  * stm32: Check if clock device is ready before accessing.
 
 * ESPI
 
@@ -560,6 +607,8 @@ Drivers and Sensors
 
 * I2S
 
+  * Removed the Intel S1000 I2S driver.
+
 * I3C
 
   * Added a driver to support the NXP MCUX I3C hardware acting as the primary controller
@@ -589,9 +638,17 @@ Drivers and Sensors
 
 * LED
 
-  * Updated LED PWM support for ESP32 boards
+  * Added support for using multiple instances of LP5562 LED module.
+  * Devicetree usage cleanups.
+  * i2c_dt_spec migration.
+  * Updated LED PWM support for ESP32 boards.
 
 * LoRa
+
+  * Added support for setting the sync-word and iq-inverted modes in LoRa modems.
+  * Removed ``REQUIRES_FULL_LIBC`` library dependency from LoRa drivers. This
+    results in considerable flash memory savings.
+  * Devicetree usage cleanups.
 
 * MBOX
 
@@ -630,8 +687,13 @@ Drivers and Sensors
 * PWM
 
   * Added PWM driver for Renesas R-Car platform
+  * Added PWM driver for Raspberry Pi Pico series
   * Added PWM support for NXP LPC55S36
   * Added MCPWM support for ESP32 boards
+  * Fixed the nRF PWM driver to properly handle cases where PWM generation is
+    used for some channels while some others are set to a constant level (active
+    or inactive), e.g. when the LED driver API is used to turn off a PWM driven
+    LED while another one (within the same PWM instance) is blinking.
 
 * Power Domain
 
@@ -685,6 +747,7 @@ Drivers and Sensors
 
   * Add interrupt-driven mode support for gd32 driver
   * Enable SPI support on NXP MIMXRT595 EVK.
+  * PL022: Added SPI driver for the PL022 peripheral.
 
 * Timer
 
@@ -694,6 +757,7 @@ Drivers and Sensors
 
   * Restructured the NXP MCUX USB driver.
   * Added USB support for NXP MXRT595.
+  * Fixed detach behavior in nRF USBD and Atmel SAM drivers
 
 * W1
 
@@ -805,6 +869,9 @@ Networking
 
 USB
 ***
+
+  * Minor bug fixes and improvements in class implementations CDC ACM, DFU, and MSC.
+    Otherwise no significant changes.
 
 Devicetree
 **********
@@ -1283,7 +1350,19 @@ Libraries / Subsystems
   * Renamed global constructor list symbols to prevent the native POSIX host
     runtime from executing the constructors before Zephyr loads.
 
+* Cbprintf
+
+  * Updated cbprintf static packaging to interpret ``unsigned char *`` as a pointer
+    to a string. See :ref:`cbprintf_packaging_limitations` for more details about
+    how to efficienty use strings. Change mainly applies to the ``logging`` subsystem
+    since it uses this feature.
+
 * Emul
+
+  * Added :c:macro:`EMUL_DT_DEFINE` and :c:macro:`EMUL_DT_INST_DEFINE` to mirror
+    :c:macro:`DEVICE_DT_DEFINE` and :c:macro:`DEVICE_DT_INST_DEFINE` respectively.
+  * Added :c:macro:`EMUL_DT_GET` to mirror :c:macro:`DEVICE_DT_GET`.
+  * Removed the need to manually register emulators in their init function (automatically done).
 
 * Filesystem
 
@@ -1314,7 +1393,7 @@ Libraries / Subsystems
   * MCUMGR taskstat runtime field support has been added, if
     :kconfig:option:`CONFIG_OS_MGMT_TASKSTAT` is enabled, which will report the
     number of CPU cycles have been spent executing the thread.
-  * MCUMgr transport API drops ``zst`` parameter, of :c:struct:`zephyr_smp_transport`
+  * MCUMGR transport API drops ``zst`` parameter, of :c:struct:`zephyr_smp_transport`
     type, from :c:func:`zephyr_smp_transport_out_fn` type callback as it has
     not been used, and the ``nb`` parameter, of :c:struct:`net_buf` type,
     can carry additional transport information when needed.
@@ -1336,15 +1415,30 @@ Libraries / Subsystems
     structs for storage.
   * Levels of function redirection which were previously used to support multiple
     OS's have been reduced to simplify code and reduce output size.
+  * Bluetooth SMP debug output format specifier has been fixed to avoid a build
+    warning on native_posix platforms.
+  * Issue with :c:func:`img_mgmt_dfu_stopped` being wrongly called on success
+    has been fixed.
+  * Issue with MCUMGR img_mgmt image erase wrongly returning success during an
+    error condition has been fixed.
+  * Unused MCUMGR header files such as mcumgr_util.h have been removed.
+  * Verbose error response reporting has been fixed and is now present when
+    enabled.
+  * Internal SMP functions have been removed from the public smp.h header file
+    and moved to smp_internal.h
+  * Kconfig files have been split up and moved to directories containing the
+    systems they influence.
+  * MCUMGR img_mgmt image upload over-riding/hiding of result codes has been
+    fixed.
 
-* Cbprintf and logging
+* Logging
 
-  * Updated cbprintf static packaging to interpret ``unsigned char *`` as a pointer
-    to a string. See :ref:`cbprintf_packaging_limitations` for more details about
-    how to efficienty use strings. Change mainly applies to the ``logging`` subsystem
-    since it uses this feature.
+  * Removed legacy (v1) implementation and removed any references to the logging
+    v2.
   * Added :c:macro:`LOG_RAW` for logging strings without additional formatting.
     It is similar to :c:macro:`LOG_PRINTK` but do not append ``<cr>`` when new line is found.
+  * Improvements in the ADSP backend.
+  * File system backend: Only delete old files if necessary.
 
 * IPC
 
@@ -1359,9 +1453,21 @@ Libraries / Subsystems
 
 * LoRaWAN
 
+  * Added Class-C support.
+  * Upgraded the loramac-node repository to v4.6.0.
+  * Moved the ``REQUIRES_FULL_LIBC`` library dependency from LoRa to LoRaWAN.
+  * Fixed the async reception in SX127x modems.
+
 * Modbus
 
+  * Added user data entry for ADU callback
+
 * Power management
+
+  * Allow multiple subscribers to latency changes in the policy manager.
+  * Added new API to implement suspend-to-RAM (S2RAM). Select
+    :kconfig:option:`CONFIG_PM_S2RAM` to enable this feature.
+  * Added :c:func:`pm_device_is_powered` to query a device power state.
 
 * POSIX
 
@@ -1389,11 +1495,25 @@ Libraries / Subsystems
 
 * Settings
 
+  * Added API function :c:func:`settings_storage_get` which allows to get
+    the storage instance used by the settings backed to store its records.
+
 * Shell
 
 * Storage
 
 * Testsuite
+
+  * Added Kconfig support to ``unit_testing`` platform.
+  * Migrate tests to use :kconfig:option:`CONFIG_ZTEST_NEW_API`
+  * Add ztest options for shuffling tests/suites via:
+
+    * :kconfig:option:`CONFIG_ZTEST_SHUFFLE`
+    * :kconfig:option:`CONFIG_ZTEST_SHUFFLE_SUITE_REPEAT_COUNT`
+    * :kconfig:option:`CONFIG_ZTEST_SHUFFLE_TEST_REPEAT_COUNT`
+
+  * Add ztest native_posix command line arguments for running specific tests/suites using
+    ``--test suite_name:*`` or ``--test suite_name::test_name`` command line arguments.
 
 * Tracing
 
@@ -1425,7 +1545,11 @@ HALs
 
 * Nordic
 
+  * Updated nrfx to version 2.9.0
+
 * RPi Pico
+
+  * Renamed ``adc_read`` to ``pico_adc_read``, to avoid name collision with Zephyr's API
 
 * Renesas
 
@@ -1460,30 +1584,30 @@ HALs
 MCUboot
 *******
 
-  * Added initial support for leveraging the RAM-LOAD mode with the zephyr-rtos port.
-  * Added the MCUboot status callback support.
-    See :kconfig:option:`CONFIG_MCUBOOT_ACTION_HOOKS`.
-  * Edited includes to have the ``zephyr/`` prefix.
-  * Edited the DFU detection's GPIO-pin configuration to be done through DTS using the ``mcuboot-button0`` pin alias.
-  * Edited the LED usage to prefer DTS' ``mcuboot-led0`` alias over the ``bootloader-led0`` alias.
-  * Removed :c:func:`device_get_binding()` usage in favor of :c:func:`DEVICE_DT_GET()`.
-  * Added support for generic `watchdog0` alias.
-  * Enabled watchdog feed by default.
-  * Dropped the :kconfig:option:`CONFIG_BOOT_IMAGE_ACCESS_HOOKS_FILE` option.
-    The inclusion of the Hooks implementation file is now up to the project's customization.
-  * Switched zephyr port from using ``FLASH_AREA_`` macros to ``FIXED_PARTITION_`` macros.
-  * Made flash_map_backend.h compatible with a C++ compiler
-  * Allowed to get the flash write alignment based on the ``zephyr,flash`` DT chosen node property
+* Added initial support for leveraging the RAM-LOAD mode with the zephyr-rtos port.
+* Added the MCUboot status callback support.
+  See :kconfig:option:`CONFIG_MCUBOOT_ACTION_HOOKS`.
+* Edited includes to have the ``zephyr/`` prefix.
+* Edited the DFU detection's GPIO-pin configuration to be done through DTS using the ``mcuboot-button0`` pin alias.
+* Edited the LED usage to prefer DTS' ``mcuboot-led0`` alias over the ``bootloader-led0`` alias.
+* Removed :c:func:`device_get_binding()` usage in favor of :c:func:`DEVICE_DT_GET()`.
+* Added support for generic `watchdog0` alias.
+* Enabled watchdog feed by default.
+* Dropped the :kconfig:option:`CONFIG_BOOT_IMAGE_ACCESS_HOOKS_FILE` option.
+  The inclusion of the Hooks implementation file is now up to the project's customization.
+* Switched zephyr port from using ``FLASH_AREA_`` macros to ``FIXED_PARTITION_`` macros.
+* Made flash_map_backend.h compatible with a C++ compiler
+* Allowed to get the flash write alignment based on the ``zephyr,flash`` DT chosen node property
 
- * boot_serial:
+* boot_serial:
 
-    * Upgraded from cddl-gen v0.1.0 to zcbor v0.4.0.
-    * Refactored and optimized the code, mainly in what affects the progressive erase implementation.
-    * Fixed a compilation issue with the echo command code.
+  * Upgraded from cddl-gen v0.1.0 to zcbor v0.4.0.
+  * Refactored and optimized the code, mainly in what affects the progressive erase implementation.
+  * Fixed a compilation issue with the echo command code.
 
-  * imgtool:
+* imgtool:
 
-    * Added support for providing a signature through a third party.
+  * Added support for providing a signature through a third party.
 
 Trusted Firmware-M
 ******************
@@ -1502,6 +1626,8 @@ Tests and Samples
 * A large number of tests have been reworked to use the new ztest API, see
   :ref:`test-framework` for more details. This should be used for newly
   introduce tests as well.
+* smp_svr Bluetooth overlay (overlay-bt) has been reworked to increase
+  throughput and enable packet reassembly.
 
 Issue Related Items
 *******************
