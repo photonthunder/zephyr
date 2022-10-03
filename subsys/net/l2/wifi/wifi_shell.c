@@ -11,7 +11,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(net_wifi_shell, LOG_LEVEL_INF);
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <zephyr/shell/shell.h>
@@ -68,12 +68,14 @@ static void handle_wifi_scan_result(struct net_mgmt_event_callback *cb)
 
 	if (scan_result == 1U) {
 		print(context.sh, SHELL_NORMAL,
-		      "\n%-4s | %-32s %-5s | %-4s | %-4s | %-5s    | %s\n",
-		      "Num", "SSID", "(len)", "Chan", "RSSI", "Sec", "MAC");
+		      "\n%-4s | %-32s %-5s | %-13s | %-4s | %-15s | %s\n",
+		      "Num", "SSID", "(len)", "Chan (Band)", "RSSI", "Security", "BSSID");
 	}
 
-	print(context.sh, SHELL_NORMAL, "%-4d | %-32s %-5u | %-4u | %-4d | %-5s | %s\n",
-	      scan_result, entry->ssid, entry->ssid_length, entry->channel, entry->rssi,
+	print(context.sh, SHELL_NORMAL, "%-4d | %-32s %-5u | %-4u (%-6s) | %-4d | %-15s | %s\n",
+	      scan_result, entry->ssid, entry->ssid_length, entry->channel,
+	      wifi_band_txt(entry->band),
+	      entry->rssi,
 	      wifi_security_txt(entry->security),
 	      ((entry->mac_length) ?
 		      net_sprint_ll_addr_buf(entry->mac, WIFI_MAC_ADDR_LEN, mac_string_buf,
@@ -163,7 +165,7 @@ static int __wifi_args_to_params(size_t argc, char *argv[],
 	params->ssid_length = strlen(params->ssid);
 
 	/* Channel (optional) */
-	if ((idx < argc) && (strlen(argv[idx]) <= 2)) {
+	if ((idx < argc) && (strlen(argv[idx]) <= 3)) {
 		params->channel = strtol(argv[idx], &endptr, 10);
 		if (*endptr != '\0') {
 			return -EINVAL;
@@ -216,7 +218,7 @@ static int cmd_wifi_connect(const struct shell *sh, size_t argc,
 			    char *argv[])
 {
 	struct net_if *iface = net_if_get_default();
-	static struct wifi_connect_req_params cnx_params;
+	struct wifi_connect_req_params cnx_params = { 0 };
 
 	if (__wifi_args_to_params(argc - 1, &argv[1], &cnx_params)) {
 		shell_help(sh);
@@ -431,18 +433,19 @@ SHELL_STATIC_SUBCMD_SET_CREATE(wifi_cmd_ap,
 
 SHELL_STATIC_SUBCMD_SET_CREATE(wifi_commands,
 	SHELL_CMD(connect, NULL,
+		  "Connect to a Wi-Fi AP"
 		  "\"<SSID>\"\n<channel number (optional), "
 		  "0 means all>\n"
-		  "<PSK (optional: valid only for secured SSIDs)>"
-		  "<Security type (optional: valid only for secured SSIDs)>"
-		  "0:None, 1:PSK, 2:PSK-256, 3:SAE"
+		  "<PSK (optional: valid only for secure SSIDs)>\n"
+		  "<Security type (optional: valid only for secure SSIDs)>\n"
+		  "0:None, 1:PSK, 2:PSK-256, 3:SAE\n"
 		  "<MFP (optional): 0:Disable, 1:Optional, 2:Required",
 		  cmd_wifi_connect),
-	SHELL_CMD(disconnect, NULL, "Disconnect from Wi-Fi AP",
+	SHELL_CMD(disconnect, NULL, "Disconnect from the Wi-Fi AP",
 		  cmd_wifi_disconnect),
-	SHELL_CMD(scan, NULL, "Scan Wi-Fi AP", cmd_wifi_scan),
-	SHELL_CMD(status, NULL, "Status of Wi-Fi interface", cmd_wifi_status),
-	SHELL_CMD(statistics, NULL, "Wi-Fi statistics", cmd_wifi_stats),
+	SHELL_CMD(scan, NULL, "Scan for Wi-Fi APs", cmd_wifi_scan),
+	SHELL_CMD(status, NULL, "Status of the Wi-Fi interface", cmd_wifi_status),
+	SHELL_CMD(statistics, NULL, "Wi-Fi interface statistics", cmd_wifi_stats),
 	SHELL_CMD(ap, &wifi_cmd_ap, "Access Point mode commands", NULL),
 	SHELL_SUBCMD_SET_END
 );

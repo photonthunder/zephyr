@@ -62,13 +62,13 @@ manifest:
       groups:
         - hal
     - name: hal_espressif
-      revision: a85cf740929b7537e0bb07572b6c4f3456b04420
+      revision: 2cb20ac6c5b25f3c91b35e7997451db47030b7cb
       path: modules/hal/espressif
       west-commands: west/west-commands.yml
       groups:
         - hal
     - name: hal_gigadevice
-      revision: b0b6e0a76b77f5eee45473dae04a992ad4fcfa45
+      revision: dd0e0322474462b58059e6fedaf1d67d2a0864d0
       path: modules/hal/gigadevice
       groups:
         - hal
@@ -93,7 +93,7 @@ manifest:
       groups:
         - hal
     - name: hal_nxp
-      revision: 3516aa5f722eb70b969b3bc57bcf9389ad901057
+      revision: 708c95825b0d5279620935a1356299fff5dfbc6e
       path: modules/hal/nxp
       groups:
         - hal
@@ -115,7 +115,7 @@ manifest:
         - hal
     - name: hal_rpi_pico
       path: modules/hal/rpi_pico
-      revision: 191f5ba46fda49523cdaaef27583d1c875ba2c36
+      revision: a094c060e0c2d43c7f9d8f5c06cc0665117e0c18
       groups:
         - hal
     - name: hal_silabs
@@ -129,7 +129,7 @@ manifest:
       groups:
         - hal
     - name: hal_stm32
-      revision: 5b1610c3cf46589d50e2634ba240b7b38bc59c53
+      revision: 642e199c59828137dc6b1c7044a289d4269886d1
       path: modules/hal/stm32
       groups:
         - hal
@@ -140,7 +140,7 @@ manifest:
       groups:
         - hal
     - name: hal_ti
-      revision: 29af528900d03af02a17b4b7f4fc93f19a81da2a
+      revision: 000b944a788b6005d7776198e1348f5c8a657259
       path: modules/hal/ti
       groups:
         - hal
@@ -166,9 +166,9 @@ manifest:
       path: modules/fs/littlefs
       groups:
         - fs
-      revision: 652f2c5646e79b881e6f3099686ad3b7af9e216c
+      revision: ca583fd297ceb48bced3c2548600dc615d67af24
     - name: loramac-node
-      revision: 0257b50905695192d095667b1c3abb80346db1a1
+      revision: ce57712f3e426bbbb13acaec97b45369f716f43a
       path: modules/lib/loramac-node
     - name: lvgl
       revision: af95bdfcf6784edd958ea08139c713e2d3dee7af
@@ -182,7 +182,7 @@ manifest:
       groups:
         - crypto
     - name: mcuboot
-      revision: 21e56a1bd033af263e808940779a1adaf4d5465e
+      revision: 13f63976bca672ee018f9d55f1e31f02f4135b64
       path: bootloader/mcuboot
     - name: mipi-sys-t
       path: modules/debug/mipi-sys-t
@@ -235,8 +235,13 @@ manifest:
       groups:
         - debug
     - name: trusted-firmware-m
-      revision: 4c984817d861512edaeca27b83308e9b9915a98a
+      revision: 231235f26f5295ac4faf8c5617dbb9779869d821
       path: modules/tee/tf-m/trusted-firmware-m
+      groups:
+        - tee
+    - name: trusted-firmware-a
+      revision: d29cddecde614d81cbec1fb0086cdaebd77d3575
+      path: modules/tee/tf-a/trusted-firmware-a
       groups:
         - tee
     - name: tf-m-tests
@@ -257,7 +262,7 @@ manifest:
       path: modules/lib/zcbor
     - name: zscilib
       path: modules/lib/zscilib
-      revision: a54986aa98db4082ac56b582843bb5b5435208a6
+      revision: ca070ddabdaf67175a2da901d0bd62e8899371c5
 
   group-filter:
     - -ci

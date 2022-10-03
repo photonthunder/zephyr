@@ -65,7 +65,7 @@ static int curr_cpu(void)
 }
 
 /**
- * @brief Tests for SMP
+ * @brief SMP
  * @defgroup kernel_smp_tests SMP Tests
  * @ingroup all_tests
  * @{
@@ -73,15 +73,15 @@ static int curr_cpu(void)
  */
 
 /**
- * @defgroup kernel_smp_integration_tests SMP Tests
- * @ingroup all_tests
+ * @defgroup kernel_smp_integration_tests SMP Integration Tests
+ * @ingroup kernel_smp_tests
  * @{
  * @}
  */
 
 /**
- * @defgroup kernel_smp_module_tests SMP Tests
- * @ingroup all_tests
+ * @defgroup kernel_smp_module_tests SMP Module Tests
+ * @ingroup kernel_smp_tests
  * @{
  * @}
  */
@@ -118,6 +118,14 @@ static void t2_fn(void *a, void *b, void *c)
 ZTEST(smp, test_smp_coop_threads)
 {
 	int i, ok = 1;
+
+	if (!IS_ENABLED(CONFIG_SCHED_IPI_SUPPORTED)) {
+		/* The spawned thread enters an infinite loop, so it can't be
+		 * successfully aborted via an IPI.  Just skip in that
+		 * configuration.
+		 */
+		ztest_test_skip();
+	}
 
 	k_tid_t tid = k_thread_create(&t2, t2_stack, T2_STACK_SIZE, t2_fn,
 				      NULL, NULL, NULL,
@@ -546,6 +554,14 @@ ZTEST(smp, test_get_cpu)
 {
 	k_tid_t thread_id;
 
+	if (!IS_ENABLED(CONFIG_SCHED_IPI_SUPPORTED)) {
+		/* The spawned thread enters an infinite loop, so it can't be
+		 * successfully aborted via an IPI.  Just skip in that
+		 * configuration.
+		 */
+		ztest_test_skip();
+	}
+
 	/* get current cpu number */
 	_cpu_id = arch_curr_cpu()->id;
 
@@ -615,6 +631,7 @@ void z_trace_sched_ipi(void)
  *
  * @see arch_sched_ipi()
  */
+#ifdef CONFIG_SCHED_IPI_SUPPORTED
 ZTEST(smp, test_smp_ipi)
 {
 #ifndef CONFIG_TRACE_SCHED_IPI
@@ -640,8 +657,9 @@ ZTEST(smp, test_smp_ipi)
 				sched_ipi_has_called);
 	}
 }
+#endif
 
-void k_sys_fatal_error_handler(unsigned int reason, const z_arch_esf_t *pEsf)
+void k_sys_fatal_error_handler(unsigned int reason, const z_arch_esf_t *esf)
 {
 	static int trigger;
 
@@ -720,7 +738,7 @@ ZTEST(smp, test_workq_on_smp)
 	k_busy_wait(DELAY_US);
 
 	/* check work have finished */
-	zassert_equal(k_work_busy_get(&work), 0, NULL);
+	zassert_equal(k_work_busy_get(&work), 0);
 
 	main_thread_id = curr_cpu();
 

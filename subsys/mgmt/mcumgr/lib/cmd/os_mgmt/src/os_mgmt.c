@@ -9,7 +9,7 @@
 #include <zephyr/sys/util.h>
 #include <assert.h>
 #include <string.h>
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
 #include <zephyr/debug/object_tracing.h>
 #include <zephyr/kernel_structs.h>
@@ -47,7 +47,7 @@ struct thread_iterator_info {
 /**
  * Command handler: os echo
  */
-#if CONFIG_OS_MGMT_ECHO
+#ifdef CONFIG_OS_MGMT_ECHO
 static int
 os_mgmt_echo(struct mgmt_ctxt *ctxt)
 {
@@ -85,9 +85,9 @@ os_mgmt_echo(struct mgmt_ctxt *ctxt)
 }
 #endif
 
-#if CONFIG_OS_MGMT_TASKSTAT
+#ifdef CONFIG_OS_MGMT_TASKSTAT
 
-#if defined(CONFIG_OS_MGMT_TASKSTAT_USE_THREAD_NAME_FOR_NAME)
+#ifdef CONFIG_OS_MGMT_TASKSTAT_USE_THREAD_NAME_FOR_NAME
 static inline bool
 os_mgmt_taskstat_encode_thread_name(zcbor_state_t *zse, int idx,
 				    const struct k_thread *thread)
@@ -158,14 +158,32 @@ os_mgmt_taskstat_encode_stack_info(zcbor_state_t *zse,
 }
 
 static inline bool
+os_mgmt_taskstat_encode_runtime_info(zcbor_state_t *zse, const struct k_thread *thread)
+{
+	bool ok = true;
+
+#if defined(CONFIG_SCHED_THREAD_USAGE)
+	k_thread_runtime_stats_t thread_stats;
+
+	k_thread_runtime_stats_get((struct k_thread *)thread, &thread_stats);
+
+	ok = zcbor_tstr_put_lit(zse, "runtime") &&
+	zcbor_uint64_put(zse, thread_stats.execution_cycles);
+#elif !defined(CONFIG_OS_MGMT_TASKSTAT_ONLY_SUPPORTED_STATS)
+	ok = zcbor_tstr_put_lit(zse, "runtime") &&
+	zcbor_uint32_put(zse, 0);
+#endif
+
+	return ok;
+}
+
+static inline bool
 os_mgmt_taskstat_encode_unsupported(zcbor_state_t *zse)
 {
 	bool ok = true;
 
 	if (!IS_ENABLED(CONFIG_OS_MGMT_TASKSTAT_ONLY_SUPPORTED_STATS)) {
-		ok = zcbor_tstr_put_lit(zse, "runtime")		&&
-		     zcbor_uint32_put(zse, 0)			&&
-		     zcbor_tstr_put_lit(zse, "cswcnt")		&&
+		ok = zcbor_tstr_put_lit(zse, "cswcnt")		&&
 		     zcbor_uint32_put(zse, 0)			&&
 		     zcbor_tstr_put_lit(zse, "last_checkin")	&&
 		     zcbor_uint32_put(zse, 0)			&&
@@ -209,6 +227,7 @@ static void os_mgmt_taskstat_encode_one(const struct k_thread *thread, void *use
 			zcbor_tstr_put_lit(iterator_ctx->zse, "state")				&&
 			zcbor_uint32_put(iterator_ctx->zse, thread->base.thread_state)		&&
 			os_mgmt_taskstat_encode_stack_info(iterator_ctx->zse, thread)		&&
+			os_mgmt_taskstat_encode_runtime_info(iterator_ctx->zse, thread)		&&
 			os_mgmt_taskstat_encode_unsupported(iterator_ctx->zse)			&&
 			zcbor_map_end_encode(iterator_ctx->zse, TASKSTAT_COLUMNS_MAX);
 
@@ -243,6 +262,7 @@ static int os_mgmt_taskstat_read(struct mgmt_ctxt *ctxt)
 }
 #endif /* CONFIG_OS_MGMT_TASKSTAT */
 
+#ifdef CONFIG_REBOOT
 /**
  * Command handler: os reset
  */
@@ -264,8 +284,9 @@ os_mgmt_reset(struct mgmt_ctxt *ctxt)
 
 	return os_mgmt_impl_reset(CONFIG_OS_MGMT_RESET_MS);
 }
+#endif
 
-#if CONFIG_OS_MGMT_MCUMGR_PARAMS
+#ifdef CONFIG_OS_MGMT_MCUMGR_PARAMS
 static int
 os_mgmt_mcumgr_params(struct mgmt_ctxt *ctxt)
 {
@@ -282,20 +303,22 @@ os_mgmt_mcumgr_params(struct mgmt_ctxt *ctxt)
 #endif
 
 static const struct mgmt_handler os_mgmt_group_handlers[] = {
-#if CONFIG_OS_MGMT_ECHO
+#ifdef CONFIG_OS_MGMT_ECHO
 	[OS_MGMT_ID_ECHO] = {
 		os_mgmt_echo, os_mgmt_echo
 	},
 #endif
-#if CONFIG_OS_MGMT_TASKSTAT
+#ifdef CONFIG_OS_MGMT_TASKSTAT
 	[OS_MGMT_ID_TASKSTAT] = {
 		os_mgmt_taskstat_read, NULL
 	},
 #endif
+#ifdef CONFIG_REBOOT
 	[OS_MGMT_ID_RESET] = {
 		NULL, os_mgmt_reset
 	},
-#if CONFIG_OS_MGMT_MCUMGR_PARAMS
+#endif
+#ifdef CONFIG_OS_MGMT_MCUMGR_PARAMS
 	[OS_MGMT_ID_MCUMGR_PARAMS] = {
 		os_mgmt_mcumgr_params, NULL
 	},
