@@ -120,14 +120,7 @@ static void gclk_reset(void)
 	}
 }
 
-static void gclk_connect(uint8_t gclk, uint8_t src, uint8_t div)
-{
-	GCLK->GENCTRL[gclk].reg = GCLK_GENCTRL_SRC(src)
-				| GCLK_GENCTRL_DIV(div)
-				| GCLK_GENCTRL_GENEN;
-}
-
-static int atmel_samd_init(const struct device *arg)
+static int atmel_samd_init(void)
 {
 	uint32_t key;
 #if CONFIG_SOC_ATMEL_SAMD5X_DPLL_MAIN_CLK
