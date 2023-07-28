@@ -1,0 +1,18 @@
+# Copyright (c) 2021 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+config LOG_BACKEND_FCB
+	bool "Flash Circular Buffer backend"
+	select LOG_OUTPUT
+	help
+	  When enabled, backend is using the FCB to output logs.
+
+
+
+if LOG_BACKEND_FCB
+
+backend = FCB
+backend-str = fcb
+source "subsys/logging/Kconfig.template.log_format_config"
+
+endif # LOG_BACKEND_FCB

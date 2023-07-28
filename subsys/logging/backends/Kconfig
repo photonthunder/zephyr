@@ -17,5 +17,6 @@ rsource "Kconfig.swo"
 rsource "Kconfig.uart"
 rsource "Kconfig.xtensa_sim"
 rsource "Kconfig.multidomain"
+rsource "Kconfig.fcb"
 
 endmenu
