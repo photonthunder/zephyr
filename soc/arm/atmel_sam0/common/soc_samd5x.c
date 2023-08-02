@@ -135,8 +135,8 @@ static int atmel_samd_init(void)
 
 	key = irq_lock();
 
-	/* enable the Cortex M Cache Controller */
-	CMCC->CTRL.bit.CEN = 1;
+	/* Don't enable the Cortex M Cache Controller */
+	// CMCC->CTRL.bit.CEN = 1;
 
 	gclk_reset();
 	osc_init();
